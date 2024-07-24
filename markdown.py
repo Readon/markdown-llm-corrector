@@ -127,7 +127,7 @@ class MarkdownEditor:
 
             for original, correction in corrections:
                 if original in modified_contents:
-                    if correction != "No corrections required.":
+                    if correction.strip() != "No corrections required.":
                         modified_contents = modified_contents.replace(
                             original, correction
                         )
