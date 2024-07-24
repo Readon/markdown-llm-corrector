@@ -37,7 +37,7 @@ class MarkdownEditor:
 
     def __lint(self):
         if self.original_file_path is not None:
-            dir = os.dirname(self.original_file_path)
+            dir = os.path.dirname(self.original_file_path)
             glob_pattern = os.path.basename(self.original_file_path)
         else:
             dir = self.input_dir
@@ -56,14 +56,19 @@ class MarkdownEditor:
                 f"markdownlint -f {file.parent}/{file_path_lint} -q"
             )
 
-    def __load_lint_files(self):
+    def __get_lint_glob(self):
         if self.original_file_path is not None:
-            dir = os.dirname(self.original_file_path)
+            dir = os.path.dirname(self.original_file_path)
             filename = os.path.basename(self.original_file_path)
-            glob = os.path.splittext(filename)[0] + "_lint_.md"
+            glob = os.path.splitext(filename)[0] + "_lint_.md"
         else:
             dir = self.input_dir
             glob = "**/*_lint_.md"
+        return dir, glob
+
+
+    def __load_lint_files(self):
+        dir, glob = self.__get_lint_glob()
 
         loader = DirectoryLoader(
             dir,
@@ -76,15 +81,10 @@ class MarkdownEditor:
         return data
 
     def _cleanup_tmp_lint(self):
-        if self.original_file_path is not None:
-            dir = os.dirname(self.original_file_path)
-            glob_pattern = os.path.basename(self.original_file_path)
-        else:
-            dir = self.input_dir
-            glob_pattern = "**/*_lint_.md"
+        dir, glob = self.__get_lint_glob()
 
         directory_path = Path(dir)
-        files = list(directory_path.glob(glob_pattern))
+        files = list(directory_path.glob(glob))
 
         for file in files:
             file.unlink()
