@@ -1,22 +1,15 @@
 import argparse
 import logging
+import os
 
 from data import examples
 from utils import Utils
 from git import Git
 from markdown import MarkdownEditor
 
-from ibm_watson_machine_learning.foundation_models.utils.enums import (
-    ModelTypes,
-    DecodingMethods,
-)
-from ibm_watson_machine_learning.metanames import GenTextParamsMetaNames as GenParams
-from ibm_watson_machine_learning.foundation_models import Model
-from ibm_watson_machine_learning.foundation_models.extensions.langchain import (
-    WatsonxLLM,
-)
+from langchain_community.llms import Ollama
 from langchain_community.vectorstores import FAISS
-from langchain_community.embeddings import HuggingFaceEmbeddings
+from langchain_huggingface import HuggingFaceEmbeddings
 from langchain.prompts.example_selector import SemanticSimilarityExampleSelector
 
 logging.basicConfig(level=logging.WARN)
@@ -63,34 +56,14 @@ def main():
 
     is_running_on_git_clone = repo_name is not None
 
-    apikey = Utils.get_env_variable(
-        "IBM_CLOUD_API_KEY", "Please enter your WML api key (hit enter): "
-    )
-    project_id = Utils.get_env_variable(
-        "PROJECT_ID", "Please enter your project_id (hit enter): "
-    )
-
     if is_running_on_git_clone:
         git = Git(repo_owner, repo_name, working_dir)
         git.clone()
         input_dir = f"{working_dir}/{repo_name}"
 
-    credentials = {"url": "https://us-south.ml.cloud.ibm.com", "apikey": apikey}
-    parameters = {
-        GenParams.DECODING_METHOD: DecodingMethods.GREEDY,
-        GenParams.STOP_SEQUENCES: ["</end>", "Text:<startoftext>"],
-        GenParams.MAX_NEW_TOKENS: 1500,
-        GenParams.MIN_NEW_TOKENS: 1,
-    }
-
-    model = Model(
-        model_id=ModelTypes.LLAMA_2_70B_CHAT,
-        params=parameters,
-        credentials=credentials,
-        project_id=project_id,
-    )
-
-    model_llm = WatsonxLLM(model=model)
+    OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://0.0.0.0:11434")
+    OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "llama3:70b-instruct-q5_K_M")
+    model_llm = Ollama(model=OLLAMA_MODEL, base_url=OLLAMA_BASE_URL, temperature = 0)
 
     example_selector = SemanticSimilarityExampleSelector.from_examples(
         examples,
