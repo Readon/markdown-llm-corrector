@@ -6,6 +6,7 @@ import shutil
 import tempfile
 
 from concurrent.futures import ThreadPoolExecutor
+from langchain_core.documents import Document
 from langchain.prompts import PromptTemplate
 from langchain.chains import LLMChain
 from langchain_community.document_loaders import TextLoader
@@ -89,6 +90,15 @@ class MarkdownEditor:
         for file in files:
             file.unlink()
 
+    def _get_header_texts(self, docs):
+        headers = [doc.metadata for doc in docs]
+        freeze_headers = set([frozenset(x.items()) for x in headers])
+        for i, head in enumerate(freeze_headers):
+            text = [x[1] for x in head if x[0] in ["Header 1", "Header 2", "Header 3", "Header 4"]][0]
+            new_doc = Document(page_content=text, metadata = head)
+            docs.append(new_doc)
+        return docs
+
     def process_markdown(self):
         data = self.__lint()
         data = self.__load_lint_files()
@@ -109,6 +119,7 @@ class MarkdownEditor:
         text_splitter = MarkdownTextSplitter(chunk_size=2000, chunk_overlap=0)
 
         data = text_splitter.transform_documents(split_docs)
+        data = self._get_header_texts(data)
 
         with ThreadPoolExecutor(max_workers=50) as executor:
             futures = [executor.submit(self.__process_chunk, doc) for doc in data]
@@ -173,8 +184,8 @@ class MarkdownEditor:
             prefix=textwrap.dedent(
                 """\
                 [[[Instruction]]]
-                You are an advanced AI text editor tasked with enhancing the rightness of the content in format: markdown, with the following specific instructions:
-                1. Fix any incorrect markdown syntax for headings, lists, bold, italic, and code blocks.
+                You are an advanced AI text editor tasked with enhancing the rightness of the content, with the following specific instructions:
+                1. Fix any incorrect markdown syntax for lists, bold, italic, and code blocks, but do not add any headings.
                 2. Ensure proper spacing and line breaks are used for readability.
                 3. Correct any obvious spelling errors in the markdown text.
                 4. Do NOT modify the content or syntax of any mathematical equations, even if they appear to be incorrect or use non-standard notation.
@@ -184,8 +195,6 @@ class MarkdownEditor:
                 8. If there are code blocks, ensure they are properly formatted but do not change the code itself.
                 9. If there is no correction to make, respond with "No corrections required."
                 10. Preserve the original markdown formatting, including markdown links.
-                11. Semantically infer on the correct words and remove the unnecessary space in words.
-                12. Remove unnecessary spaces within words (e.g., change "T EST" to "TEST").
                 
                 After making the necessary corrections, respond exclusively with the refined text, maintaining the essence and structure of the original content.
                 """                               
