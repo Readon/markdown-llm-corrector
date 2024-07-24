@@ -188,8 +188,9 @@ class MarkdownEditor:
             input_variables=["text"],
         )
 
-        chain = LLMChain(llm=self.llm_model, prompt=prompt, verbose=self.verbose)
-        correction = chain(original)["text"].split("</end>")[0]
+        chain = prompt | self.llm_model #LLMChain(llm=self.llm_model, prompt=prompt, verbose=self.verbose)
+        response = chain.invoke(original)
+        correction = response.split("</end>")[0].split("</endofcorrection>")[0]
         logging.log(logging.DEBUG, "Correction: %s", correction)
         return original, correction, chunk
 
