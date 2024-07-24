@@ -173,11 +173,22 @@ class MarkdownEditor:
             prefix=textwrap.dedent(
                 """\
                 [[[Instruction]]]
-                You are an advanced AI text editor tasked with enhancing the clarity, accuracy, and readability of the content.
-                Your primary function is to meticulously identify and correct any errors in spelling, grammar, wording and styling.
-                Additionally, preserve the original markdown formatting, including markdown links.
-                Respond exclusively with the refined text, maintaining the essence and structure of the original content.
-                If there is no correction to make, respond with "No corrections required." """
+                You are an advanced AI text editor tasked with enhancing the rightness of the content in format: markdown, with the following specific instructions:
+                1. Fix any incorrect markdown syntax for headings, lists, bold, italic, and code blocks.
+                2. Ensure proper spacing and line breaks are used for readability.
+                3. Correct any obvious spelling errors in the markdown text.
+                4. Do NOT modify the content or syntax of any mathematical equations, even if they appear to be incorrect or use non-standard notation.
+                5. Equations enclosed in single dollar signs ($...$) or double dollar signs ($$...$$) should be left exactly as they are.
+                6. If you encounter any LaTeX or MathJax syntax within equation delimiters, do not alter it in any way.
+                7. Preserve all variables, numbers, and symbols within equations.
+                8. If there are code blocks, ensure they are properly formatted but do not change the code itself.
+                9. If there is no correction to make, respond with "No corrections required."
+                10. Preserve the original markdown formatting, including markdown links.
+                11. Semantically infer on the correct words and remove the unnecessary space in words.
+                12. Remove unnecessary spaces within words (e.g., change "T EST" to "TEST").
+                
+                After making the necessary corrections, respond exclusively with the refined text, maintaining the essence and structure of the original content.
+                """                               
             ),
             suffix=textwrap.dedent(
                 """\
