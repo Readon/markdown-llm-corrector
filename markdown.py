@@ -36,6 +36,9 @@ class MarkdownEditor:
         self.verbose = verbose
         self.corrected_file_name_suffix = corrected_file_name_suffix
 
+    header_names = ["Header 1", "Header 2", "Header 3", "Header 4"]
+    header_set = [("#" * (i+1), name) for i, name in enumerate(header_names)]
+
     def __lint(self):
         if self.original_file_path is not None:
             dir = os.path.dirname(self.original_file_path)
@@ -94,7 +97,7 @@ class MarkdownEditor:
         headers = [doc.metadata for doc in docs]
         freeze_headers = set([frozenset(x.items()) for x in headers])
         for i, head in enumerate(freeze_headers):
-            text = [x[1] for x in head if x[0] in ["Header 1", "Header 2", "Header 3", "Header 4"]][0]
+            text = [x[1] for x in head if x[0] in self.header_names][0]
             new_doc = Document(page_content=text, metadata = head)
             docs.append(new_doc)
         return docs
@@ -103,7 +106,7 @@ class MarkdownEditor:
         data = self.__lint()
         data = self.__load_lint_files()
 
-        header_text_splitter = MarkdownHeaderTextSplitter(return_each_line=True, strip_headers=True, headers_to_split_on=[("#", "Header 1"), ("##", "Header 2"), ("###", "Header 3"), ("####", "Header 4")])
+        header_text_splitter = MarkdownHeaderTextSplitter(return_each_line=True, strip_headers=True, headers_to_split_on=self.header_set)
 
         split_docs = []
 
