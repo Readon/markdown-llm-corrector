@@ -164,10 +164,8 @@ class MarkdownEditor:
     @staticmethod
     def __remove_tags(text:str) -> str:
         return re.sub(r'</(end|endofcorrection|startofcorrection)>', '', text)
-
-    def __process_chunk(self, chunk):
-        original = chunk.page_content
-        # print(original)
+    
+    def __construct_correction_chain(self):
         example_prompt = PromptTemplate(
             input_variables=["text", "correction"],
             template=textwrap.dedent(
@@ -213,8 +211,17 @@ class MarkdownEditor:
         )
 
         chain = prompt | self.llm_model | StrOutputParser() | self.__remove_tags
-        correction = chain.invoke(original)
-        logging.log(logging.DEBUG, "Correction: %s", correction)
+
+        return chain
+    
+    def __process_chunk(self, chunk):
+        original = chunk.page_content
+        # print(original)
+
+        correction_chain = self.__construct_correction_chain()
+        correction = correction_chain.invoke(original)
+        
+        logging.log(logging.DEBUG, "Correction: %s", correction)        
         return original, correction, chunk
 
     def __remove_code_tables_comments(self, markdown_text):
