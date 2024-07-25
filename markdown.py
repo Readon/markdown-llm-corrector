@@ -147,13 +147,9 @@ class MarkdownEditor:
                     logging.warn("'%s' not found in the document.", original)
 
             if self.replace_with_correction:
-                new_file_path = original_file_path.split("_lint_")[0] + ".md"  # Override file content in git mode
+                new_file_path = original_file_path.replace("_lint_", "")  # Override file content in git mode
             else:
-                new_file_path = (
-                    original_file_path.split("_lint_")[0].rsplit(".", 1)[0]
-                    + self.corrected_file_name_suffix
-                    + ".md"
-                )
+                new_file_path = original_file_path.replace("_lint_", self.corrected_file_name_suffix)
 
             with open(new_file_path, "w") as file:
                 print("!!!!!! Writing " + new_file_path)
