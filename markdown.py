@@ -26,7 +26,8 @@ class MarkdownEditor:
         original_file_path,
         replace_with_correction=False,
         verbose=True,
-        corrected_file_name_suffix="_corrected"
+        out_file_suffix="_corrected",
+        mid_file_suffix="_lint_"
     ):
         self.example_selector = example_selector
         self.llm_model = llm_model
@@ -34,12 +35,14 @@ class MarkdownEditor:
         self.original_file_path = original_file_path
         self.replace_with_correction = replace_with_correction
         self.verbose = verbose
-        self.corrected_file_name_suffix = corrected_file_name_suffix
+        self.out_file_suffix = out_file_suffix
+        self.mid_file_suffix = mid_file_suffix
+        self.output_file_path = None
 
     header_names = ["Header 1", "Header 2", "Header 3", "Header 4"]
     header_set = [("#" * (i+1), name) for i, name in enumerate(header_names)]
 
-    def __lint(self):
+    def _lint(self):
         if self.original_file_path is not None:
             dir = os.path.dirname(self.original_file_path)
             glob_pattern = os.path.basename(self.original_file_path)
@@ -52,7 +55,7 @@ class MarkdownEditor:
         files = list(directory_path.glob(glob_pattern))
 
         for file in files:
-            file_path_lint = file.stem + "_lint_" + ".md"
+            file_path_lint = file.stem + self.mid_file_suffix + ".md"
 
             shutil.copy(file, f"{file.parent}/{file_path_lint}")
 
@@ -60,19 +63,19 @@ class MarkdownEditor:
                 f"markdownlint -f {file.parent}/{file_path_lint} -q"
             )
 
-    def __get_lint_glob(self):
+    def _get_lint_glob(self):
         if self.original_file_path is not None:
             dir = os.path.dirname(self.original_file_path)
             filename = os.path.basename(self.original_file_path)
-            glob = os.path.splitext(filename)[0] + "_lint_.md"
+            glob = os.path.splitext(filename)[0] + self.mid_file_suffix + ".md"
         else:
             dir = self.input_dir
-            glob = "**/*_lint_.md"
+            glob = "**/*" +  + self.mid_file_suffix + ".md"
         return dir, glob
 
 
     def __load_lint_files(self):
-        dir, glob = self.__get_lint_glob()
+        dir, glob = self._get_lint_glob()
 
         loader = DirectoryLoader(
             dir,
@@ -85,7 +88,7 @@ class MarkdownEditor:
         return data
 
     def _cleanup_tmp_lint(self):
-        dir, glob = self.__get_lint_glob()
+        dir, glob = self._get_lint_glob()
 
         directory_path = Path(dir)
         files = list(directory_path.glob(glob))
@@ -103,7 +106,7 @@ class MarkdownEditor:
         return docs
 
     def process_markdown(self):
-        data = self.__lint()
+        data = self._lint()
         data = self.__load_lint_files()
 
         header_text_splitter = MarkdownHeaderTextSplitter(return_each_line=True, strip_headers=True, headers_to_split_on=self.header_set)
@@ -150,22 +153,25 @@ class MarkdownEditor:
                     logging.warn("'%s' not found in the document.", original)
 
             if self.replace_with_correction:
-                new_file_path = original_file_path.replace("_lint_", "")  # Override file content in git mode
+                new_file_path = original_file_path.replace(self.mid_file_suffix, "")  # Override file content in git mode
             else:
-                new_file_path = original_file_path.replace("_lint_", self.corrected_file_name_suffix)
+                new_file_path = original_file_path.replace(self.mid_file_suffix, self.out_file_suffix)
 
             with open(new_file_path, "w") as file:
                 print("!!!!!! Writing " + new_file_path)
                 file.write(modified_contents)
+            
+            if self.original_file_path is not None:
+                self.output_file_path = new_file_path
 
         # Cleanup
         self._cleanup_tmp_lint()
 
     @staticmethod
-    def __remove_tags(text:str) -> str:
+    def _remove_tags(text:str) -> str:
         return re.sub(r'</(end|endofcorrection|startofcorrection)>', '', text)
     
-    def __construct_correction_chain(self):
+    def _construct_chain(self, original):
         example_prompt = PromptTemplate(
             input_variables=["text", "correction"],
             template=textwrap.dedent(
@@ -210,7 +216,7 @@ class MarkdownEditor:
             input_variables=["text"],
         )
 
-        chain = prompt | self.llm_model | StrOutputParser() | self.__remove_tags
+        chain = prompt | self.llm_model | StrOutputParser() | self._remove_tags
 
         return chain
     
@@ -218,11 +224,12 @@ class MarkdownEditor:
         original = chunk.page_content
         # print(original)
 
-        correction_chain = self.__construct_correction_chain()
-        correction = correction_chain.invoke(original)
-        
-        logging.log(logging.DEBUG, "Correction: %s", correction)        
-        return original, correction, chunk
+        chain = self._construct_chain(original)
+        response = chain.invoke(original)
+        print("##" + response)
+
+        logging.log(logging.DEBUG, "Correction: %s", response)        
+        return original, response, chunk
 
     def __remove_code_tables_comments(self, markdown_text):
         # Remove code blocks
