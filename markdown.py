@@ -195,6 +195,7 @@ class MarkdownEditor:
                 8. If there are code blocks, ensure they are properly formatted but do not change the code itself.
                 9. If there is no correction to make, respond with "No corrections required."
                 10. Preserve the original markdown formatting, including markdown links.
+                11. Keep the original content as much as possible.
                 
                 After making the necessary corrections, respond exclusively with the refined text, maintaining the essence and structure of the original content.
                 """                               
