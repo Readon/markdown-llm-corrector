@@ -8,7 +8,7 @@ import tempfile
 from concurrent.futures import ThreadPoolExecutor
 from langchain_core.documents import Document
 from langchain.prompts import PromptTemplate
-from langchain.chains import LLMChain
+from langchain.schema import StrOutputParser
 from langchain_community.document_loaders import TextLoader
 from langchain.text_splitter import MarkdownTextSplitter
 from langchain.prompts.few_shot import FewShotPromptTemplate
@@ -161,6 +161,10 @@ class MarkdownEditor:
         # Cleanup
         self._cleanup_tmp_lint()
 
+    @staticmethod
+    def __remove_tags(text:str) -> str:
+        return re.sub(r'</(end|endofcorrection|startofcorrection)>', '', text)
+
     def __process_chunk(self, chunk):
         original = chunk.page_content
         # print(original)
@@ -208,9 +212,8 @@ class MarkdownEditor:
             input_variables=["text"],
         )
 
-        chain = prompt | self.llm_model
-        response = chain.invoke(original)
-        correction = response.split("</end>")[0].split("</endofcorrection>")[0].split("</startofcorrection>")[0]
+        chain = prompt | self.llm_model | StrOutputParser() | self.__remove_tags
+        correction = chain.invoke(original)
         logging.log(logging.DEBUG, "Correction: %s", correction)
         return original, correction, chunk
 
