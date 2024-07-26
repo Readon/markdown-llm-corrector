@@ -1,4 +1,3 @@
-import re
 import textwrap
 import logging
 import os
@@ -15,6 +14,7 @@ from langchain.prompts.few_shot import FewShotPromptTemplate
 from langchain_community.document_loaders import DirectoryLoader
 from langchain.text_splitter import MarkdownHeaderTextSplitter
 from pathlib import Path
+import regex as re
 
 
 class MarkdownEditor:
@@ -104,6 +104,12 @@ class MarkdownEditor:
             new_doc = Document(page_content=text, metadata = head)
             docs.append(new_doc)
         return docs
+    
+    def _get_match_string(self, text):
+        ret = text.splitlines()
+        ret = [re.escape(x.strip()) for x in ret if len(x.strip()) > 0]
+        ret = r'\s+'.join(ret)
+        return ret
 
     def process_markdown(self):
         data = self._lint()
@@ -143,14 +149,17 @@ class MarkdownEditor:
                 modified_contents = file.read()
 
             for original, correction in corrections:
-                if original in modified_contents:
+                raw_original = repr(original)
+                if modified_contents.find(original):
                     if correction.strip() != "No corrections required.":
-                        modified_contents = modified_contents.replace(
-                            original, correction
-                        )
+                        new_contents = re.sub(self._get_match_string(original), correction.replace("\\", "\\\\"), modified_contents)
+                        if new_contents != modified_contents:
+                            modified_contents = new_contents
+                        else:
+                            logging.warn("'%s' replace failed in the document '%s'.", raw_original, original_file_path)
                 else:
                     # Log or handle cases where the original is not found
-                    logging.warn("'%s' not found in the document.", original)
+                    logging.warn("'%s' not found in the document '%s'.", original, original_file_path)
 
             if self.replace_with_correction:
                 new_file_path = original_file_path.replace(self.mid_file_suffix, "")  # Override file content in git mode
