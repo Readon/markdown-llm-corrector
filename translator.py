@@ -48,7 +48,6 @@ class MarkdownTranslator(MarkdownEditor):
         else:
             dir = self.input_dir
             glob = "**/*.md"
-        print(glob)
         return dir, glob
     
     def _cleanup_tmp_lint(self):
@@ -56,7 +55,7 @@ class MarkdownTranslator(MarkdownEditor):
 
     @staticmethod
     def _remove_tags(text:str) -> str:
-        return re.sub(r'<startoftext>|</endoftext>', '', text)
+        return re.sub(r'<startoftext>|</endoftext>|\[\[\[Output\]\]\]', '', text)
     
     def _construct_chain(self, original):
         input_lang = self.input_lang
@@ -73,7 +72,8 @@ class MarkdownTranslator(MarkdownEditor):
                 7. Preserve all variables, numbers, and symbols within equations.
                 8. If there are code blocks, ensure they are properly formatted but do not change the code itself.
                 9. Preserve the original markdown formatting, including markdown links.
-                10. Do not translate any number and acronym.
+                10. Do not translate any number and acronym, and keep them in original style.
+                11. Note for image should be translated.
 
                 Text:<startoftext>{{text}}</endoftext>
 
