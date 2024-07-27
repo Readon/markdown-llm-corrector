@@ -130,6 +130,7 @@ class MarkdownEditor:
 
             for sub_doc in sub_split_docs:
                 sub_doc.metadata['source'] = doc.metadata['source']
+                logging.info("====" + sub_doc.page_content)
 
             split_docs = split_docs + sub_split_docs
 
@@ -242,8 +243,8 @@ class MarkdownEditor:
 
         chain = self._construct_chain(original)
         response = chain.invoke(original)        
-        logging.debug("=>" + repr(original))
-        logging.debug("<=" + response)
+        logging.info("=>" + repr(original))
+        logging.info("<=" + response)
 
         logging.log(logging.DEBUG, "Correction: %s", response)        
         return original, response, chunk
