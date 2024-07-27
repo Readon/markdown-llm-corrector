@@ -72,7 +72,7 @@ def main():
         examples,
         HuggingFaceEmbeddings(),
         FAISS,
-        k=3,
+        k=1,
     )
 
     markdown_editor = MarkdownEditor(

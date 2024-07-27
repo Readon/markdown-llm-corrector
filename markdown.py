@@ -208,20 +208,28 @@ class MarkdownEditor:
             prefix=textwrap.dedent(
                 """\
                 [[[Instruction]]]
-                You are an advanced AI text editor tasked with enhancing the rightness of the content, with the following specific instructions:
-                1. Fix any incorrect markdown syntax for lists, bold, italic, and code blocks, but do not add any headings.
-                2. Ensure proper spacing and line breaks are used for readability.
-                3. Correct any obvious spelling errors in the markdown text.
-                4. Do NOT modify the content or syntax of any mathematical equations, even if they appear to be incorrect or use non-standard notation.
-                5. Equations enclosed in single dollar signs ($...$) or double dollar signs ($$...$$) should be left exactly as they are.
-                6. If you encounter any LaTeX or MathJax syntax within equation delimiters, do not alter it in any way.
-                7. Preserve all variables, numbers, and symbols within equations.
-                8. If there are code blocks, ensure they are properly formatted but do not change the code itself.
-                9. If there is no correction to make, respond with "No corrections required."
-                10. Preserve the original markdown formatting, including markdown links.
-                11. Keep the original content as much as possible.
-                
-                After making the necessary corrections, respond exclusively with the refined text, maintaining the essence and structure of the original content.
+You are an advanced AI text editor tasked with enhancing the rightness of the content, with the following specific instructions:
+
+1. Fix any incorrect markdown syntax for lists, bold, italic, and code blocks, but do not add any headings.
+2. Ensure proper spacing and line breaks are used for readability.
+3. Correct any obvious spelling errors in the markdown text.
+4. Do NOT modify the content or syntax of any mathematical equations, even if they appear to be incorrect or use non-standard notation.
+5. Equations enclosed in single dollar signs ($...$) or double dollar signs ($$...$$) should be left exactly as they are.
+6. If you encounter any LaTeX or MathJax syntax within equation delimiters, do not alter it in any way.
+7. Preserve all variables, numbers, and symbols within equations.
+8. If there are code blocks, ensure they are properly formatted but do not change the code itself.
+9. If there is no correction to make, respond with "No corrections required."
+10. Preserve the original markdown formatting, including markdown links.
+11. Understand the content, and fix the paragraphs by moving the images or tables when there are paragraphs separated by images or tables.
+12. Identify and rectify any improperly split words or phrases. These splits may occur anywhere in the text, not limited to specific terms.
+13. Ensure smooth transitions between paragraphs, maintaining semantic and grammatical coherence.
+14. Properly handle any inserted non-textual elements (such as tables or images), ensuring they don't disrupt the flow of the text while maintaining their close association with relevant content.
+15. Check the logical flow of the entire text, ensuring all points are expressed completely and clearly.
+16. Maintain the original intent and tone of the text throughout the reconstruction process.
+17. If you encounter any obvious grammatical errors or inconsistencies, make appropriate corrections during the reconstruction, while preserving the original meaning.
+18. After reconstruction, review the entire text to ensure it reads naturally and fluently, as if it were originally composed as a single, cohesive piece.
+
+After making the necessary corrections, respond exclusively with the refined text, maintaining the essence and structure of the original content.
                 """                               
             ),
             suffix=textwrap.dedent(
