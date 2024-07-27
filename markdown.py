@@ -120,7 +120,7 @@ class MarkdownEditor:
         data = self._lint()
         data = self.__load_lint_files()
 
-        header_text_splitter = MarkdownHeaderTextSplitter(return_each_line=True, strip_headers=True, headers_to_split_on=self.header_set)
+        header_text_splitter = MarkdownHeaderTextSplitter(return_each_line=False, strip_headers=True, headers_to_split_on=self.header_set)
 
         split_docs = []
 
@@ -134,7 +134,7 @@ class MarkdownEditor:
 
             split_docs = split_docs + sub_split_docs
 
-        text_splitter = MarkdownTextSplitter(chunk_size=2000, chunk_overlap=0)
+        text_splitter = MarkdownTextSplitter(chunk_size=4000, chunk_overlap=0)
 
         data = text_splitter.transform_documents(split_docs)
         data = self._get_header_texts(data)
