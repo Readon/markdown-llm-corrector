@@ -6,6 +6,7 @@ from data import examples
 from utils import Utils
 from git import Git
 from markdown import MarkdownEditor
+from translator import MarkdownTranslator
 
 from langchain_community.llms import Ollama
 from langchain_community.vectorstores import FAISS
@@ -53,6 +54,8 @@ def main():
     repo_owner = args.repo_org
     repo_name = args.repo_name
     working_dir = args.working_dir
+    input_lang = "English"
+    target_lang = "Chinese"
 
     is_running_on_git_clone = repo_name is not None
 
@@ -69,7 +72,7 @@ def main():
         examples,
         HuggingFaceEmbeddings(),
         FAISS,
-        k=10,
+        k=3,
     )
 
     markdown_editor = MarkdownEditor(
@@ -82,6 +85,18 @@ def main():
     )
 
     markdown_editor.process_markdown()
+
+    translator = MarkdownTranslator(
+        model_llm,
+        input_lang,
+        target_lang,
+        input_dir,
+        markdown_editor.output_file_path,
+        replace_with_correction=is_running_on_git_clone,
+        verbose=False
+    )
+
+    translator.process_markdown()
 
     if is_running_on_git_clone:
         git.create_pull_request()
