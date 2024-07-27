@@ -106,9 +106,14 @@ class MarkdownEditor:
         return docs
     
     def _get_match_string(self, text):
-        ret = text.splitlines()
+        ret = re.sub(r'\x03', '', text)
+        ret = ret.splitlines()
         ret = [re.escape(x.strip()) for x in ret if len(x.strip()) > 0]
         ret = r'\s+'.join(ret)
+        return ret
+    
+    def _remove_distrub(self, text):
+        ret = re.sub(r'\x03', '', text)
         return ret
 
     def process_markdown(self):
@@ -147,16 +152,18 @@ class MarkdownEditor:
         for original_file_path, corrections in corrections_by_file.items():
             with open(original_file_path, "r") as file:
                 modified_contents = file.read()
+            modified_contents = self._remove_distrub(modified_contents)
 
             for original, correction in corrections:
                 raw_original = repr(original)
-                if modified_contents.find(original):
-                    if correction.strip() != "No corrections required.":
-                        new_contents = re.sub(self._get_match_string(original), correction.replace("\\", "\\\\"), modified_contents)
+                if modified_contents.find(original) or (len(original) > 3 and len(correction) > 3):
+                    if correction.strip() != "No corrections required." and original.strip() != correction.strip():
+                        match_str = self._get_match_string(original)
+                        new_contents = re.sub(match_str, correction.replace("\\", "\\\\"), modified_contents)
                         if new_contents != modified_contents:
                             modified_contents = new_contents
                         else:
-                            logging.warn("'%s' replace failed in the document '%s'.", raw_original, original_file_path)
+                            logging.warn("To replace '%s' with '%s' failed in the document '%s'.", match_str, correction, original_file_path)
                 else:
                     # Log or handle cases where the original is not found
                     logging.warn("'%s' not found in the document '%s'.", original, original_file_path)
@@ -234,8 +241,9 @@ class MarkdownEditor:
         # print(original)
 
         chain = self._construct_chain(original)
-        response = chain.invoke(original)
-        print("##" + response)
+        response = chain.invoke(original)        
+        logging.debug("=>" + repr(original))
+        logging.debug("<=" + response)
 
         logging.log(logging.DEBUG, "Correction: %s", response)        
         return original, response, chunk
