@@ -186,7 +186,7 @@ class MarkdownEditor:
 
     @staticmethod
     def _remove_tags(text:str) -> str:
-        return re.sub(r'</(end|endofcorrection|startofcorrection)>', '', text)
+        return re.sub(r'</(end|endofcorrection|startofcorrection)>|<endofcorrection>', '', text)
     
     def _construct_chain(self, original):
         example_prompt = PromptTemplate(
