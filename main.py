@@ -65,14 +65,14 @@ def main():
         input_dir = f"{working_dir}/{repo_name}"
 
     OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://0.0.0.0:11434")
-    OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "gemma2:27b-instruct-q5_K_M")
-    model_llm = Ollama(model=OLLAMA_MODEL, base_url=OLLAMA_BASE_URL, temperature = 0)
+    CORRECTION_MODEL = os.getenv("CORRECTION_MODEL", "gemma2:9b-instruct-q5_K_M")
+    model_llm = Ollama(model=CORRECTION_MODEL, base_url=OLLAMA_BASE_URL, temperature = 0)
 
     example_selector = SemanticSimilarityExampleSelector.from_examples(
         examples,
         HuggingFaceEmbeddings(),
         FAISS,
-        k=3,
+        k=1,
     )
 
     markdown_editor = MarkdownEditor(
@@ -86,6 +86,8 @@ def main():
 
     markdown_editor.process_markdown()
 
+    TRANSLATE_MODEL = os.getenv("TRANSLATE_MODEL", "gemma2:27b-instruct-q5_K_M")
+    model_llm = Ollama(model=TRANSLATE_MODEL, base_url=OLLAMA_BASE_URL, temperature = 0)
     translator = MarkdownTranslator(
         model_llm,
         input_lang,
