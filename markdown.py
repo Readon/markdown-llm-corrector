@@ -118,6 +118,11 @@ class MarkdownEditor:
     def _remove_distrub(self, text):
         ret = re.sub(r'\x03', '', text)
         return ret
+    
+    def _standardize_sentence(self, text):
+        pattern = r'(?<=[.?!]) *'
+        ret = re.sub(pattern, ' ', text)
+        return ret
 
     def process_markdown(self):
         data = self._lint()
@@ -133,6 +138,7 @@ class MarkdownEditor:
 
             for sub_doc in sub_split_docs:
                 sub_doc.metadata['source'] = doc.metadata['source']
+                sub_doc.page_content = self._standardize_sentence(sub_doc.page_content)
                 logging.info("====" + sub_doc.page_content)
 
             split_docs = split_docs + sub_split_docs
@@ -155,6 +161,7 @@ class MarkdownEditor:
             with open(original_file_path, "r") as file:
                 modified_contents = file.read()
             modified_contents = self._remove_distrub(modified_contents)
+            modified_contents = self._standardize_sentence(modified_contents)
 
             for original, correction in corrections:
                 raw_original = repr(original)
