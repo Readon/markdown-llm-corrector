@@ -9,8 +9,8 @@ from langchain_core.documents import Document
 from langchain.prompts import PromptTemplate
 from langchain.schema import StrOutputParser
 from langchain_community.document_loaders import TextLoader
-from langchain.text_splitter import MarkdownTextSplitter
-from langchain.prompts.few_shot import FewShotPromptTemplate
+from langchain_experimental.text_splitter import SemanticChunker
+from langchain_community.embeddings.ollama import OllamaEmbeddings
 from langchain_community.document_loaders import DirectoryLoader
 from langchain.text_splitter import MarkdownHeaderTextSplitter
 from pathlib import Path
@@ -39,6 +39,8 @@ class MarkdownEditor:
         self.mid_file_suffix = mid_file_suffix
         self.output_file_path = None
         self.return_each_line = False
+        self.embedding = OllamaEmbeddings(model="nomic-embed-text")
+        self.text_splitter = SemanticChunker(self.embedding)
 
     header_names = ["Header 1", "Header 2", "Header 3", "Header 4"]
     header_set = [("#" * (i+1), name) for i, name in enumerate(header_names)]
@@ -135,9 +137,7 @@ class MarkdownEditor:
 
             split_docs = split_docs + sub_split_docs
 
-        text_splitter = MarkdownTextSplitter(chunk_size=4000, chunk_overlap=0)
-
-        data = text_splitter.transform_documents(split_docs)
+        data = self.text_splitter.transform_documents(split_docs)
         data = self._get_header_texts(data)
 
         with ThreadPoolExecutor(max_workers=50) as executor:

@@ -4,8 +4,7 @@ import textwrap
 
 from langchain.prompts import PromptTemplate
 from langchain.schema import StrOutputParser
-from langchain_community.document_loaders import TextLoader
-from langchain_community.document_loaders import DirectoryLoader
+from langchain.text_splitter import MarkdownTextSplitter
 
 from markdown import MarkdownEditor
 
@@ -36,6 +35,7 @@ class MarkdownTranslator(MarkdownEditor):
         self.input_lang = input_lang
         self.target_lang = target_lang
         self.return_each_line = True
+        self.text_splitter = MarkdownTextSplitter(chunk_size=2000, chunk_overlap=0)
     
     
     def _lint(self):
