@@ -38,6 +38,7 @@ class MarkdownEditor:
         self.out_file_suffix = out_file_suffix
         self.mid_file_suffix = mid_file_suffix
         self.output_file_path = None
+        self.return_each_line = False
 
     header_names = ["Header 1", "Header 2", "Header 3", "Header 4"]
     header_set = [("#" * (i+1), name) for i, name in enumerate(header_names)]
@@ -120,7 +121,7 @@ class MarkdownEditor:
         data = self._lint()
         data = self.__load_lint_files()
 
-        header_text_splitter = MarkdownHeaderTextSplitter(return_each_line=False, strip_headers=True, headers_to_split_on=self.header_set)
+        header_text_splitter = MarkdownHeaderTextSplitter(return_each_line=self.return_each_line, strip_headers=True, headers_to_split_on=self.header_set)
 
         split_docs = []
 

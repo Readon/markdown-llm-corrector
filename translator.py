@@ -35,6 +35,7 @@ class MarkdownTranslator(MarkdownEditor):
         )
         self.input_lang = input_lang
         self.target_lang = target_lang
+        self.return_each_line = True
     
     
     def _lint(self):
